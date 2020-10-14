@@ -5,18 +5,21 @@
 
 use std::io;
 use std::io::{Error, Read, Stdout, Write};
+use std::ops::Sub;
+use std::time::{Duration, Instant};
+use termion::color::*;
 use termion::event::Key;
 use termion::input::TermRead;
 use termion::raw::{IntoRawMode, RawTerminal};
 use termion::{async_stdin, clear};
 
+mod highscore;
 mod utils;
-use std::ops::Sub;
-use std::time::{Duration, Instant};
-use termion::color::*;
+
+use crate::highscore::HighscoresStore;
 use utils::*;
 
-#[derive(Copy, Debug, Clone)]
+#[derive(Copy, Debug, Clone, Eq, PartialEq)]
 enum Direction {
     Up,
     Down,
@@ -171,7 +174,15 @@ impl Game {
             }
         }
         if let Some(direction) = new_direction {
-            self.direction = direction;
+            if match direction {
+                Direction::Up if self.direction != Direction::Down => true,
+                Direction::Down if self.direction != Direction::Up => true,
+                Direction::Right if self.direction != Direction::Left => true,
+                Direction::Left if self.direction != Direction::Right => true,
+                _ => false,
+            } {
+                self.direction = direction;
+            }
         }
 
         // convert head to body
@@ -195,6 +206,7 @@ impl Game {
 
         self.screen
             .set(self.head, Cell::Snake(self.direction, SnakeType::Head));
+
         if self.head.x == 1
             || self.head.y == 1
             || self.head.x == self.screen.w
@@ -208,6 +220,7 @@ impl Game {
 }
 
 fn main() {
+    HighscoresStore::new();
     println!("{}", clear::All);
     let (w, h) = termion::terminal_size().unwrap();
 

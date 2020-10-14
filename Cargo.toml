@@ -9,3 +9,7 @@ edition = "2018"
 [dependencies]
 termion="1"
 rand="0.7.2"
+serde={version="1", features=["derive"]}
+
+rustbreak ={version="2.0.0-rc3", features=["yaml_enc"]}
+shellexpand = "1"
